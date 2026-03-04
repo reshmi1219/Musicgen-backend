@@ -11,7 +11,7 @@ CORS(app)
 
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-HF_URL = "https://router.huggingface.co/hf-inference/models/facebook/musicgen-small"
+HF_URL = "https://router.huggingface.co/hf-inference/models/facebook/musicgen-small?provider=hf-inference"
 
 HEADERS = {
     "Authorization": f"Bearer {HF_TOKEN}",
