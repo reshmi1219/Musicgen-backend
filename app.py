@@ -16,26 +16,25 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-MODEL_URL =  "https://api.replicate.com/v1/models/meta/musicgen/predictions"
+MODEL_URL = "https://api.replicate.com/v1/models/meta/musicgen/predictions"
+
 
 @app.route("/", methods=["GET"])
 def home():
     return {"status": "MusicGen backend running"}
 
+
 @app.route("/generate", methods=["POST"])
 def generate():
     data = request.get_json(force=True)
-
     prompt = data.get("prompt", "lofi relaxing music")
 
     payload = {
-    "version": "2d4f7f4e2f6e0c06b2c3c9f4e4a4a26ac0f3e3c9b6a0c6f4e7c3e2a5c9f7d8a1",
-    "input": {
-        "prompt": prompt,
-        "duration": 5
+        "input": {
+            "prompt": prompt,
+            "duration": 5
+        }
     }
-}
-    
 
     response = requests.post(
         MODEL_URL,
@@ -47,7 +46,6 @@ def generate():
         return jsonify({"error": response.text}), 500
 
     prediction = response.json()
-
     prediction_url = prediction["urls"]["get"]
 
     # Wait for generation
@@ -57,8 +55,8 @@ def generate():
 
         if result["status"] == "succeeded":
             audio_url = result["output"]
-
             audio = requests.get(audio_url).content
+
             filename = f"{uuid.uuid4().hex}.wav"
 
             with open(filename, "wb") as f:
@@ -69,9 +67,11 @@ def generate():
         elif result["status"] == "failed":
             return jsonify({"error": "Music generation failed"}), 500
 
+
 @app.route("/health")
 def health():
     return {"status": "ok"}
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
