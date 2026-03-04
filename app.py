@@ -16,7 +16,7 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-MODEL_URL = "https://api.replicate.com/v1/predictions"
+MODEL_URL =  "https://api.replicate.com/v1/models/meta/musicgen/predictions"
 
 @app.route("/", methods=["GET"])
 def home():
@@ -29,12 +29,13 @@ def generate():
     prompt = data.get("prompt", "lofi relaxing music")
 
     payload = {
-        "version": "671ac645ce3a2b2bce3f4bfefd4dc2621c99ceb8590b47e810cd7b5e2ad65379",
-        "input": {
-            "prompt": prompt,
-            "duration": 5
-        }
+    "version": "2d4f7f4e2f6e0c06b2c3c9f4e4a4a26ac0f3e3c9b6a0c6f4e7c3e2a5c9f7d8a1",
+    "input": {
+        "prompt": prompt,
+        "duration": 5
     }
+}
+    
 
     response = requests.post(
         MODEL_URL,
