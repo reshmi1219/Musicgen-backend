@@ -9,15 +9,14 @@ print("🔥 RUNNING FILE:", os.path.abspath(__file__))
 app = Flask(__name__)
 CORS(app)
 
-HF_TOKEN = os.getenv("HF_TOKEN")
-
-HF_URL = "https://router.huggingface.co/hf-inference/models/facebook/musicgen-small?provider=hf-inference"
+REPLICATE_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
 HEADERS = {
-    "Authorization": f"Bearer {HF_TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "audio/wav"
+    "Authorization": f"Token {REPLICATE_TOKEN}",
+    "Content-Type": "application/json"
 }
+
+MODEL_URL = "https://api.replicate.com/v1/predictions"
 
 @app.route("/", methods=["GET"])
 def home():
@@ -27,28 +26,51 @@ def home():
 def generate():
     data = request.get_json(force=True)
 
-    prompt = data.get("prompt", "chill music")
-    duration = int(data.get("duration", 5))
+    prompt = data.get("prompt", "lofi relaxing music")
+
+    payload = {
+        "version": "671ac645ce3a2b2bce3f4bfefd4dc2621c99ceb8590b47e810cd7b5e2ad65379",
+        "input": {
+            "prompt": prompt,
+            "duration": 5
+        }
+    }
 
     response = requests.post(
-        HF_URL,
+        MODEL_URL,
         headers=HEADERS,
-        json={
-            "inputs": prompt,
-            "parameters": {"duration": duration}
-        },
-        timeout=120
+        json=payload
     )
 
-    if response.status_code != 200:
+    if response.status_code != 201:
         return jsonify({"error": response.text}), 500
 
-    filename = f"{uuid.uuid4().hex}.wav"
+    prediction = response.json()
 
-    with open(filename, "wb") as f:
-        f.write(response.content)
+    prediction_url = prediction["urls"]["get"]
 
-    return send_file(filename, mimetype="audio/wav")
+    # Wait for generation
+    while True:
+        r = requests.get(prediction_url, headers=HEADERS)
+        result = r.json()
+
+        if result["status"] == "succeeded":
+            audio_url = result["output"]
+
+            audio = requests.get(audio_url).content
+            filename = f"{uuid.uuid4().hex}.wav"
+
+            with open(filename, "wb") as f:
+                f.write(audio)
+
+            return send_file(filename, mimetype="audio/wav")
+
+        elif result["status"] == "failed":
+            return jsonify({"error": "Music generation failed"}), 500
+
+@app.route("/health")
+def health():
+    return {"status": "ok"}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
