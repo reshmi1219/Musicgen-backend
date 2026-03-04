@@ -10,10 +10,8 @@ app = Flask(__name__)
 CORS(app)
 
 HF_TOKEN = os.getenv("HF_TOKEN")
-HF_URL = "https://api-inference.huggingface.co/models/facebook/musicgen-small"
 
-if not HF_TOKEN:
-    raise ValueError("HF_TOKEN environment variable not set")
+HF_URL = "https://router.huggingface.co/hf-inference/models/facebook/musicgen-small"
 
 HEADERS = {
     "Authorization": f"Bearer {HF_TOKEN}",
