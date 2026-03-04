@@ -9,8 +9,11 @@ print("🔥 RUNNING FILE:", os.path.abspath(__file__))
 app = Flask(__name__)
 CORS(app)
 
-HF_TOKEN = "hf_YOUR_TOKEN_HERE"  # 🔴 replace with your HuggingFace token
+HF_TOKEN = os.getenv("HF_TOKEN")
 HF_URL = "https://router.huggingface.co/hf-inference/models/facebook/musicgen-small"
+
+if not HF_TOKEN:
+    raise ValueError("HF_TOKEN environment variable not set")
 
 HEADERS = {
     "Authorization": f"Bearer {HF_TOKEN}",
@@ -24,7 +27,8 @@ def home():
 
 @app.route("/generate", methods=["POST"])
 def generate():
-    data = request.get_json()
+    data = request.get_json(force=True)
+
     prompt = data.get("prompt", "chill music")
     duration = int(data.get("duration", 5))
 
@@ -42,6 +46,7 @@ def generate():
         return jsonify({"error": response.text}), 500
 
     filename = f"{uuid.uuid4().hex}.wav"
+
     with open(filename, "wb") as f:
         f.write(response.content)
 
@@ -49,8 +54,3 @@ def generate():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
-
-
-
-
